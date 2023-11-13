@@ -8,12 +8,12 @@ The problem statement is to create a Streamlit application that allows users to 
 **Project By:** Sidharthan R
 
 **The Key take away of the project are as follows:**
->Python scripting
->Data Collection
->API integration
->Streamlit
->Plotly
->Data Management using MongoDB (Atlas) and SQL
+-Python scripting
+-Data Collection
+-API integration
+-Streamlit
+-Plotly
+-Data Management using MongoDB (Atlas) and SQL
 
 
 **Introduction**
@@ -36,19 +36,19 @@ pip install streamlit
 
 To use this project, follow these steps:
 
-> Clone the repository: ```git clone https://github.com/SidharthanRavi/YoutubeDataHarevestingAndWarehousing.git```
-> Install the required packages: ```pip install -r requirements.txt```
-> Run the Streamlit app: ```streamlit run app.py```
-> Access the app in your browser at ```http://localhost:8501```
+1- Clone the repository: ```git clone https://github.com/SidharthanRavi/YoutubeDataHarevestingAndWarehousing.git```
+2- Install the required packages: ```pip install -r requirements.txt```
+3- Run the Streamlit app: ```streamlit run app.py```
+4- Access the app in your browser at ```http://localhost:8501```
 
 **Features**
 
-> Retrieve data from the YouTube API, including channel information, playlists, videos, and comments.
-> Store the retrieved data in a MongoDB database.
-> Migrate the data to a SQL data warehouse.
-> Analyze and visualize data using Streamlit.
-> Perform queries on the SQL data warehouse.
-> Gain insights into channel performance, video metrics, and more.
+- Retrieve data from the YouTube API, including channel information, playlists, videos, and comments.
+- Store the retrieved data in a MongoDB database.
+- Migrate the data to a SQL data warehouse.
+- Analyze and visualize data using Streamlit.
+- Perform queries on the SQL data warehouse.
+- Gain insights into channel performance, video metrics, and more.
 
 **Contributing**
 
