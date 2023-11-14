@@ -60,3 +60,6 @@ To use this project, follow these steps:
 Contributions to this project are welcome! If you encounter any issues or have suggestions for improvements, please feel free to submit a pull request.
 
 For any further questions or inquiries, feel free to reach out through mail( sidharthan2908@gmail.com). We are happy to assist you with any queries.
+
+**LinkedIn	:** www.linkedin.com/in/sidharthan-ravi-53a38710b
+**Email		:** sidharthan2908@gmail.com
