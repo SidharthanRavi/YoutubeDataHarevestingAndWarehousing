@@ -6,6 +6,7 @@ import mysql.connector
 import pymongo
 import streamlit as st
 from streamlit_option_menu import option_menu
+import traceback
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
@@ -65,7 +66,12 @@ class youtubeDataExtract:
         NextPagePresent = True
         while NextPagePresent:
 
-            request = youtube.playlists().list(part="snippet,contentDetails",channelId=channel_id,maxResults=50,pageToken=nextPageToken)
+            request = youtube.playlistItems().list(
+            part='contentDetails',
+            playlistId=upload_id,
+            maxResults=50,
+            pageToken=nextPageToken
+            )
             response = request.execute()
 
             for i in range(0, len(response['items'])):
@@ -224,7 +230,7 @@ class mongodb:
     #Method to drop temp Collection, Temp Mongo DB stores the data temporarily till the Data is migrated to main Mongo DB
     def drop_temp_collection():
 
-        db = MongoCon.YoutubeMongoDBTemp
+        db = MongoCon['YoutubeMongoDBTemp']
         col = db.list_collection_names()
         if len(col) > 0:
             for i in col:
@@ -233,7 +239,7 @@ class mongodb:
 
     #Method to Store the document in mongoDB
     def data_storage(channel_name, database, data):
-        db = MongoCon.database
+        db = MongoCon[database]
         col = db[channel_name]
         col.insert_one(data)
 
@@ -241,13 +247,13 @@ class mongodb:
 
     #Main Method of the class
     def main(database):
-        db = MongoCon.YoutubeMongoDBTemp
+        db = MongoCon['YoutubeMongoDBTemp']
         col = db.list_collection_names()
 
         if len(col) == 0:
             st.info("There is no data retrived from youtube")
         else:
-            db = MongoCon.YoutubeMongoDBTemp
+            db = MongoCon['YoutubeMongoDBTemp']
             col = db.list_collection_names()
             channel_name = col[0]
 
@@ -271,7 +277,7 @@ class mongodb:
                 option = st.radio('Do you want to overwrite the data currently stored?',['Select one below', 'Yes', 'No'])
 
                 if option == 'Yes':
-                    db = MongoCon.database
+                    db = MongoCon[database]
 
                     # delete existing data
                     db[channel_name].drop()
@@ -290,7 +296,7 @@ class mongodb:
 
     #method to list the collection name
     def list_collection_names(database):
-        db = MongoCon.database
+        db = MongoCon[database]
         col = db.list_collection_names()
         col.sort(reverse=False)
         return col
@@ -444,6 +450,7 @@ class sql:
         df['comment_count'] = pd.to_numeric(df['comment_count'])
         df['duration'] = pd.to_datetime(
             df['duration'], format='%H:%M:%S').dt.time
+        df['tags']=df['tags'].apply(','.join)
         return df
 
     #-------------------------END of a Method-----------------------------------------------------
@@ -476,7 +483,7 @@ class sql:
                     list_mongodb_notin_sql.append(i)
 
             # channel name for user selection
-            option = st.selectbox('', list_mongodb_notin_sql)
+            option = st.selectbox('Select a Channel name to migrate', list_mongodb_notin_sql)
 
             if option == 'Select one':
                 col1, col2 = st.columns(2)
@@ -484,11 +491,11 @@ class sql:
                     st.warning('Please select the channel')
 
             else:
-                channel = sql.channel(sql_database, option)
-                playlist = sql.playlist(sql_database, option)
-                video = sql.video(sql_database, option)
-                comment = sql.comment(sql_database, option)
-
+                channel = sql.channel(mdb_database, option)
+                playlist = sql.playlist(mdb_database, option)
+                video = sql.video(mdb_database, option)
+                comment = sql.comment(mdb_database, option)
+                
 
                 cursor = sqlDB.cursor()
 
@@ -794,28 +801,27 @@ st.write('')
 with st.sidebar:
     
 
-    option = option_menu(menu_title='Steps For Youtube Data Extraction and Warehousing', options=['Data Retrive from YouTube API and Store data to MongoDB','Migrating Data to SQL', 'SQL Queries', 'Exit'],
-                         icons=['youtube', 'database-add', 'database-fill-check', 'list-task', 'pencil-square', 'sign-turn-right-fill'])
+    option = option_menu(menu_title='Steps For Youtube Data Extraction and Warehousing', options=['Data Retrive from YouTube API','Store data to MongoDB','Migrating Data to SQL', 'SQL Queries', 'Exit'],
+                         icons=['youtube', 'database-add', 'database-fill-check', 'list-task', 'sign-turn-right-fill'])
 
 
-if option == 'Data Retrive from YouTube API and Store data to MongoDB':
+if option == 'Data Retrive from YouTube API':
 
     try:
 
         # get input from user
-        col1= st.columns(1)
-        with col1:
-            channel_id = st.text_input("Enter Channel ID: ")
+        channel_id = st.text_input("Enter Channel ID: ")
         
         submit = st.button(label='Submit')
 
         if submit and option is not None:
             
             youtube = youTubeApi_connect()
-
+            st.write(channel_id)
             data = {}
             final = youtubeDataExtract.main(channel_id,youtube)
             data.update(final)
+            st.write(data)
             channel_name = data['channel']['channel_name']
 
             mongodb.drop_temp_collection()
@@ -823,18 +829,17 @@ if option == 'Data Retrive from YouTube API and Store data to MongoDB':
 
             # display the sample data in streamlit
             st.json(youtubeDataExtract.displaySampleData(channel_id,youtube))
-            
-
-            # Migrate the Temp data to Main mongo DB
-            mongodb.main('MainYoutubeProjectDB')
-            st.success('Retrived data from YouTube successfully And Stored to Mongo DB')
+            st.success('Retrived data from YouTube successfully')
             st.balloons()
 
-    except:
-        col1 = st.columns([0.45,0.55])
-        with col1:
-            st.warning("Please enter the valid Channel ID")
+    except Exception as e:
+        st.warning("Enter correct Channel ID")
 
+elif option=='Store data to MongoDB':
+    # Migrate the Temp data to Main mongo DB
+    mongodb.main('MainYoutubeProjectDB')
+    st.success('Retrived data from YouTube successfully And Stored to Mongo DB')
+    st.balloons()
 
 elif option == 'Migrating Data to SQL':
     sql.main(mdb_database='MainYoutubeProjectDB', sql_database='youtube')
